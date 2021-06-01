@@ -23,8 +23,8 @@ modules, the better (for training). For this demo, we're using the Fuchsia
 project.
 
 ## Preliminaries
-We assume all repositories are installed under `$HOME`, e.g. you should have
-(after the next step) a `~/fuchsia`, `~/ml-compiler-opt`, etc.
+We assume all repositories are installed under `$HOME/gits`, e.g. you should have
+(after the next step) a `~/gits/fuchsia`, `~/gits/ml-compiler-opt`, etc.
 
 ## Get repositories
 
@@ -34,7 +34,7 @@ Follow the instructions available at https://llvm.org/docs/GettingStarted.html.
 In most cases, it should be as simple as:
 
 ```shell
-cd ~ && git clone https://github.com/llvm/llvm-project.git
+cd ~/gits && git clone https://github.com/llvm/llvm-project.git
 ```
 
 Typical prerequisites:
@@ -45,8 +45,8 @@ sudo apt-get install cmake ninja-build lld
 
 
 ```shell
-export LLVM_SRCDIR=~/llvm-project
-export LLVM_INSTALLDIR=~/llvm-install
+export LLVM_SRCDIR=~/gits/llvm-project
+export LLVM_INSTALLDIR=~/gits/llvm-install
 ```
 
 ### Fuchsia
@@ -54,9 +54,9 @@ export LLVM_INSTALLDIR=~/llvm-install
 See instructions at https://fuchsia.dev/fuchsia-src/get-started/get_fuchsia_source. Make sure `PATH` is set up appropriately.
 
 ```shell
-export IDK_DIR=~/fuchsia-idk
-export SYSROOT_DIR=~/fuchsia-sysroot
-export FUCHSIA_SRCDIR=~/fuchsia
+export IDK_DIR=~/gits/fuchsia-idk
+export SYSROOT_DIR=~/gits/fuchsia-sysroot
+export FUCHSIA_SRCDIR=~/gits/fuchsia
 ```
 
 We also need:
@@ -89,8 +89,8 @@ TF_PIP=$(python3 -m pip show tensorflow | grep Location | cut -d ' ' -f 2)
 
 export TENSORFLOW_AOT_PATH="${TF_PIP}/tensorflow"
 
-mkdir ~/tensorflow
-export TENSORFLOW_C_LIB_PATH=~/tensorflow
+mkdir ~/gits/tensorflow
+export TENSORFLOW_C_LIB_PATH=~/gits/tensorflow
 wget --quiet https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.15.0.tar.gz
 tar xfz libtensorflow-cpu-linux-x86_64-1.15.0.tar.gz -C "${TENSORFLOW_C_LIB_PATH}"
 ```
@@ -135,13 +135,26 @@ the new pass manager)
 
 ```shell
 cd ${FUCHSIA_SRCDIR}
-jiri update ~/ml-compiler-opt/docs/demo/fuchsia.xml
+jiri update ~/gits/ml-compiler-opt/docs/demo/fuchsia.xml
 fx set core.x64 \
-  --args='clang_prefix="/usr/local/google/home/mtrofin/llvm-install/bin"' \
+  --args='clang_prefix="/localhome/asedagha/gits/llvm-install/bin"' \
   --args=clang_embed_bitcode=true \
   --args='optimize="size"'
 fx build
 ```
+
+In case of error, try:
+```shell
+cd out/default
+sudo ./host_x64/measure-tape --json fidling/gen/sdk/fidl/fuchsia.images/fuchsia.images.fidl.json --json fidling/gen/sdk/fidl/fuchsia.ui.gfx/fuchsia.ui.gfx.fidl.json --json fidling/gen/sdk/fidl/fuchsia.ui.input/fuchsia.ui.input.fidl.json --json fidling/gen/sdk/fidl/fuchsia.ui.scenic/fuchsia.ui.scenic.fidl.json --json fidling/gen/sdk/fidl/fuchsia.ui.views/fuchsia.ui.views.fidl.json --target-binding hlcpp --target-type fuchsia.ui.scenic/Command --out-h /local-scratch/localhome/asedagha/gits/fuchsia/sdk/lib/ui/scenic/cpp/commands_sizing.h --h-include-path lib/ui/scenic/cpp/commands_sizing.h --out-cc /local-scratch/localhome/asedagha/gits/fuchsia/sdk/lib/ui/scenic/cpp/commands_sizing.cc
+```
+
+Or
+
+```shell
+sudo cp /local-scratch/localhome/asedagha/gits/fuchsia/out/default/gen/sdk/lib/ui/scenic/cpp/cpp_sdk.api /local-scratch/localhome/asedagha/gits/fuchsia/sdk/lib/ui/scenic/cpp/scenic_cpp.api
+```
+
 
 Fuchsia build conveniently generates a size report. Let's copy it for reference.
 
@@ -173,8 +186,8 @@ fx compdb
 This produces a `compile_commands.json` compilation database, akin cmake's.
 
 ```shell
-export CORPUS=$HOME/corpus
-cd ~/ml-compiler-opt
+export CORPUS=$HOME/gits/corpus
+cd ~/gits/ml-compiler-opt
 python3 compiler_opt/tools/extract_ir.py \
   --cmd_filter="^-Oz$" \
   --input=$FUCHSIA_SRCDIR/out/default/compile_commands.json \
@@ -186,9 +199,9 @@ python3 compiler_opt/tools/extract_ir.py \
 ### Train a new model
 
 ```shell
-export DEFAULT_TRACE=$HOME/default_trace
-export WARMSTART_OUTPUT_DIR=$HOME/warmstart
-export OUTPUT_DIR=$HOME/model
+export DEFAULT_TRACE=$HOME/gits/default_trace
+export WARMSTART_OUTPUT_DIR=$HOME/gits/warmstart
+export OUTPUT_DIR=$HOME/gits/model
 ```
 
 Collect traces from the default heuristic, to kick off the training process.
@@ -270,7 +283,7 @@ replaces `TENSORFLOW_C_LIB_PATH` used earlier.
 ```shell
 cd ${FUCHSIA_SRCDIR}
 fx set core.x64 \
-  --args='clang_prefix="/usr/local/google/home/mtrofin/llvm-install-release/bin"' \
+  --args='clang_prefix="/localhome/asedagha/gits/llvm-install-release/bin"' \
   --args='optimize="size"' \
   --args=clang_ml_inliner=true
 fx build
