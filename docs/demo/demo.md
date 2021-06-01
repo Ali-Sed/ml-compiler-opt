@@ -196,6 +196,11 @@ python3 compiler_opt/tools/extract_ir.py \
   --output_dir=$CORPUS
 ```
 
+if it should be used with `sudo`:
+```shell
+sudo -E env PATH=$PATH PYTHONPATH=$PYTHONPATH python3 compiler_opt/tools/extract_ir.py   --cmd_filter="^-Oz$"   --input=$FUCHSIA_SRCDIR/out/default/compile_commands.json   --input_type=json   --llvm_objcopy_path=$LLVM_INSTALLDIR/bin/llvm-objcopy   --output_dir=$CORPUS
+```
+
 ### Train a new model
 
 ```shell
